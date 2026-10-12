@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env"))
 
 # Loopback by default: nginx is the public face
-bind = os.environ.get("GUNICORN_BIND", "127.0.0.1:8000")
+bind = os.environ.get("GUNICORN_BIND", "127.0.0.1:5500")
 workers = int(os.environ.get("GUNICORN_WORKERS", "2"))
 timeout = 30
 

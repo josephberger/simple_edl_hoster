@@ -346,6 +346,6 @@ init_db()
 if __name__ == "__main__":
     app.run(
         host=os.environ.get("EDL_HOST", "0.0.0.0"),
-        port=int(os.environ.get("EDL_PORT", "5000")),
+        port=int(os.environ.get("EDL_PORT", "5500")),
         debug=False,
     )

@@ -39,7 +39,7 @@ Copy `.env_example` to `.env` and fill it in (a ready-made `.env` is already her
 |---|---|
 | `FLASK_SECRET_KEY` | Session signing key (`openssl rand -hex 32`); same for all workers |
 | `EDL_ADMIN_PASSWORD` | Password for `admin`, applied only when the user table is empty (first run) |
-| `EDL_HOST` / `EDL_PORT` | Bind address and port (default `0.0.0.0:5000`) |
+| `EDL_HOST` / `EDL_PORT` | Bind address and port (default `0.0.0.0:5500`) |
 | `EDL_FEED_DIR` | Folder holding feed files (default `feeds`) |
 
 ### Running the Application (testing)
@@ -58,7 +58,7 @@ On initial start, the application will automatically:
 ## 2. Usage
 
 ### Web UI
-1. Navigate to: `http://<SERVER_IP>:5000/login`
+1. Navigate to: `http://<SERVER_IP>:5500/login`
 2. Log in as `admin` with the password printed at first start.
 3. Submit URLs or wildcard domains. Acceptable syntax examples:
    - `*.threatactor.net`
@@ -71,8 +71,8 @@ Every `*.txt` file in `feeds/` is its own feed, served without authentication at
 
 | File | Firewall Source URL |
 |---|---|
-| `feeds/urls.txt` | `http://<SERVER_IP>:5000/edl/urls.txt` |
-| `feeds/phishing.txt` | `http://<SERVER_IP>:5000/edl/phishing.txt` |
+| `feeds/urls.txt` | `http://<SERVER_IP>:5500/edl/urls.txt` |
+| `feeds/phishing.txt` | `http://<SERVER_IP>:5500/edl/phishing.txt` |
 
 To add a feed, create an empty or commented `.txt` file in `feeds/` (names: letters, digits, `-`, `_`). It appears in the web UI's feed dropdown immediately, no restart needed. Create one PAN-OS EDL object per feed.
 
@@ -97,7 +97,7 @@ phishing.evilcorp.com/login.php # added by admin on 2026-10-12 17:16:22 UTC
 3. Click **Add**:
    - **Name:** `Custom-Block-URLs`
    - **Type:** `URL List`
-   - **Source URL:** `http://<YOUR_SERVER_IP>:5000/edl/urls.txt` (or your HTTPS reverse-proxy URL)
+   - **Source URL:** `http://<YOUR_SERVER_IP>:5500/edl/urls.txt` (or your HTTPS reverse-proxy URL)
    - **Recurring:** Set your preferred poll interval (e.g., *Five Minute* or *Hourly*).
 4. Click **OK** and **Commit** the changes.
 
@@ -152,7 +152,7 @@ request system external-list view type url name Custom-Block-URLs
 Gunicorn is used because this is a Flask (WSGI) app; uvicorn targets ASGI frameworks and would add nothing here.
 
 ### Run gunicorn manually
-Settings live in `gunicorn.conf.py` and `.env` (`GUNICORN_BIND`, `GUNICORN_WORKERS`). By default it binds to `127.0.0.1:8000`, so only the local reverse proxy can reach it.
+Settings live in `gunicorn.conf.py` and `.env` (`GUNICORN_BIND`, `GUNICORN_WORKERS`). By default it binds to `127.0.0.1:5500`, so only the local reverse proxy can reach it. Set `GUNICORN_BIND=0.0.0.0:5500` to listen on all interfaces (no TLS unless something else provides it).
 ```bash
 source .venv/bin/activate
 gunicorn simple_edl_hoster:app
@@ -198,7 +198,7 @@ journalctl -u simple-edl-hoster -f      # logs
 ```
 
 ### nginx with SSL in front (high level)
-1. Keep gunicorn on loopback (`GUNICORN_BIND=127.0.0.1:8000`) so it is not reachable from the network.
+1. Keep gunicorn on loopback (`GUNICORN_BIND=127.0.0.1:5500`) so it is not reachable from the network.
 2. Install nginx and obtain a certificate, e.g. Let's Encrypt (`sudo certbot --nginx -d edl.example.com`) or your internal CA.
 3. Add a server block that terminates TLS and proxies to gunicorn, `/etc/nginx/sites-available/simple-edl-hoster`:
    ```nginx
@@ -216,7 +216,7 @@ journalctl -u simple-edl-hoster -f      # logs
        ssl_certificate_key /etc/letsencrypt/live/edl.example.com/privkey.pem;
 
        location / {
-           proxy_pass http://127.0.0.1:8000;
+           proxy_pass http://127.0.0.1:5500;
            proxy_set_header Host $host;
            proxy_set_header X-Real-IP $remote_addr;
            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
