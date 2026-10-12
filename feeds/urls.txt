@@ -1,0 +1,4 @@
+# Palo Alto Networks Custom EDL URL Feed
+*.example-malware.com # sample
+phishing-login.example.net/signin # sample
+badactor.example.org:8443 # sample
